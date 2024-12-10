@@ -3,9 +3,9 @@
 #include <string.h>
 #include <assert.h>
 
-#define SIZE 4//140
+#define SIZE 140
 
-void checkLetter(char crossword[SIZE][SIZE+1], int i, int j, int *total) {
+void checkLetterXMAS(char crossword[SIZE][SIZE+1], int i, int j, int *total) {
     // The 'X' check because that's what we're looking for
     if (crossword[i][j] != 'X') { return; }
     
@@ -58,7 +58,7 @@ int main() {
     // Going through the crossword
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE; j++) {
-            checkLetter(crossword, i, j, &numOfXMAS);
+            checkLetterXMAS(crossword, i, j, &numOfXMAS);
         }
     }
     
