@@ -7,8 +7,9 @@ void checkForMul(char line[], int length, int *i, int *total) {
     char mul[13];
     int j;
 
-    // Copying line segment to mul for analysis
+    // Checking if it starts with 'm' for mul
     if (line[*i] == 'm') {
+    // Copying line segment to mul for analysis
         for(j = 0; j < 12; j++) {
             if (*i+j > length) {break;}
             mul[j] = line[*i+j];
@@ -72,10 +73,41 @@ void checkForMul(char line[], int length, int *i, int *total) {
     *total += addTotal;
 }
 
+void checkForDo(char line[], int length, int *i, int *enable) {
+    // If the string starts with 'd' for do/dont
+    if (line[*i] != 'd') { return; }
+
+    // Getting the string to check
+    int j, stringLength = 8;
+    char doString[stringLength];
+    for(j = 0; j < stringLength; j++) {
+        if (*i+j > length) {break;}
+        doString[j] = line[*i+j];
+        printf("%c", doString[j]);
+    }
+    printf("\n");
+    // Is at least the minimum size for the function
+    if (strlen(doString) < stringLength-2) { return; }
+
+    char doStrings[2][8] = {"do()", "don't()"};
+
+    for(j = 0; j < 2; j++) {
+        char currString[8]; strcpy(currString, doStrings[j]);
+        for(int k = 0; k < strlen(currString); k++) {
+            if (doString[k] != currString[k]) {
+                if (j >= 1) { return; }
+                break;
+            } else if (k == strlen(currString)-1) {
+                *enable = j == 0 ? 1 : 0;
+            }
+        }
+    }
+}
+
 int main() {
     // Variables
     char line[4096];
-    int mulTotal = 0;
+    int mulTotal = 0, enabled = 1;
 
     // Opening input file
     FILE *file;
@@ -86,7 +118,10 @@ int main() {
             // Go through line and checking for mul's
             int lineLength = strlen(line);
             for(int i = 0; i < lineLength; i++) {
-                checkForMul(line, lineLength, &i, &mulTotal);
+                checkForDo(line, lineLength, &i, &enabled);
+                if (enabled) {
+                    checkForMul(line, lineLength, &i, &mulTotal);
+                }
             }
         }
         fclose(file);
