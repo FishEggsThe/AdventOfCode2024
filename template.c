@@ -6,7 +6,7 @@
 
 void TrimLine(char _line[LINESIZE]) {
     int length = strlen(_line);
-    if(_line[length] == '\n')
+    if(_line[length-1] == '\n')
         _line[length-1] = 0;
 }
 
