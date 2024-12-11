@@ -21,6 +21,7 @@ int main() {
     if (file) {
         // Getting the next line
         while (fgets(line, LINESIZE, file)) {
+            TrimLine(line);
             
         }
         fclose(file);
