@@ -4,7 +4,8 @@
 #include <assert.h>
 #include <math.h>
 #define LINESIZE 1024
-#define SIZE 10
+#define SIZE 130
+
 
 void TrimLine(char _line[LINESIZE]) {
     int length = strlen(_line);
@@ -12,9 +13,15 @@ void TrimLine(char _line[LINESIZE]) {
         _line[length-1] = 0;
 }
 
+void PrintGrid(char _grid[SIZE][SIZE+1]) {
+    for(int i = 0; i < SIZE; i++)
+        printf("%s\n", _grid[i]);
+}
+
 char GuardFacing(int _dir) {
-    char directions[5] = {'^', '<', 'v', '>'};
-    return directions[_dir/90];
+    char directions[5] = {'>', '^', '<', 'v'};
+    int index = (_dir/90);
+    return directions[index];
 }
 
 void SetPosition(int _pos[3], int _x, int _y, int _a) {
@@ -36,16 +43,47 @@ int PositionCompare(int _posA[3], int _posB[3]) {
     return 1;
 }
 
-void DetermineGuardPath(char _grid[SIZE][SIZE+1], int _guardPos[3], int _lastPos[3], int *_total) {
-    return;
+void IncrementPosition(char _grid[SIZE][SIZE+1], int _pos[3], int _dir[2], int *_total) {
+    
+}
+
+void DetermineGuardStep(char _grid[SIZE][SIZE+1], int _guardPos[3], int _lastPos[3], int *_total) {
+    // Setting values up
+    double radianConversion = 3.141592653589793/180.0;
+    double guardDir = (double)(_guardPos[2]) * radianConversion;
+    int direction[2] = {(int)cos(guardDir), (int)sin(guardDir)};
+    printf("%d, %d\n", direction[0], direction[1]);
+
+    while (_grid[_guardPos[1]-direction[1]][_guardPos[0]+direction[0]] == '#') {
+        // Turning
+        _guardPos[2] -= 90;
+        if (_guardPos[2] < 0) { _guardPos[2]+= 360; }
+        printf("turn... (%d)\n", _guardPos[2]);
+
+        // Conversion
+        guardDir = (int)((double)(_guardPos[2]) * radianConversion);
+        direction[0] = (int)cos(guardDir);
+        direction[1] = (int)sin(guardDir);
+    }
+
+
+    // IncrementPosition(_grid, _guardPos, direction, _total);
+    _grid[_guardPos[1]][_guardPos[0]] = 'X';
+    SetPosition(_guardPos, _guardPos[0]+direction[0], _guardPos[1]-direction[1], _guardPos[2]);
+
+    if (_grid[_guardPos[1]][_guardPos[0]] == '.') {
+        *_total += 1;
+    }
+    _grid[_guardPos[1]][_guardPos[0]] = GuardFacing(_guardPos[2]);
+
+    PrintGrid(_grid);
 }
 
 int main() {
     // Variables
     FILE *file;
     char line[LINESIZE], grid[SIZE][SIZE+1];
-    int total = 1, lastUpdatedPos[3], guardPos[3] = {-1, -1, -1};
-    const double PI = 3.141592653589793;
+    int total = 0, lastUpdatedPos[3], guardPos[3] = {-1, -1, -1};
 
     // Opening input file
     file = fopen("input.txt", "r");
@@ -60,12 +98,13 @@ int main() {
                 for(int x = 0; x < strlen(line); x++) {
                     if (line[x] == '^') {
                         SetPosition(guardPos, x, y, 90);
-                        printf(" <- Guard is here!");
+                        printf(" <- Guard is here! (%d, %d)", x, y);
                         break;
                     }
                 }
             }
             printf("\n");
+            y++;
         }
         fclose(file);
     }
@@ -74,10 +113,18 @@ int main() {
     // Figure out path
     do {
         // Desync check
-        if (grid[guardPos[1]][guardPos[0]] == GuardFacing(guardPos[2])) 
-        {printf("********** DESYNC!!! **********\n\n"); break; }
+        if (grid[guardPos[1]][guardPos[0]] != GuardFacing(guardPos[2])) 
+        { printf("********** DESYNC!!! %c!=%c **********\n\n", grid[guardPos[1]][guardPos[0]], GuardFacing(guardPos[2])); break; }
+
         // The real deal
-        DetermineGuardPath(grid, guardPos, lastUpdatedPos, &total);
+        DetermineGuardStep(grid, guardPos, lastUpdatedPos, &total);
+        
+        // Checking if guard leaves
+        int OOB = 0;
+        for(int i = 0; i < 2; i++) {
+            OOB += guardPos[i] < 0 || guardPos[i] >= SIZE;
+        }
+        if (OOB > 0) { printf("Guard left\n"); break; }
     } while (PositionCompare(guardPos, lastUpdatedPos) == 0);
     
     printf("total: %d\n", total);
