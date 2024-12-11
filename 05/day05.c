@@ -58,7 +58,6 @@ int main() {
     // Opening input file
     file = fopen("input.txt", "r");
     if (file) {
-        int index = 0;
         // Getting the next line
         while (fgets(line, LINESIZE, file)) {
             char* token;
