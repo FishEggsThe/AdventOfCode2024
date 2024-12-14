@@ -24,6 +24,18 @@ int CheckNumber(int _nums[16], int _numsSize, int _i, int _expTotal, int _checkT
     // Check addition then multipliction (Recursive), if either false then return false
     if (CheckNumber(_nums, _numsSize, _i+1, _expTotal, _checkTotal+_nums[_i]) == 1) { printf("add "); return 1; }
     if (CheckNumber(_nums, _numsSize, _i+1, _expTotal, _checkTotal*_nums[_i]) == 1) { printf("mul "); return 1; }
+    // The weird one
+    u_int64_t catTotal = _checkTotal;
+    int i = 10;
+    while(1) {
+        if (_nums[_i] < i) {
+            catTotal *= i;
+            catTotal += _nums[_i];
+            break;
+        }
+        i*=10;
+    }
+    if (CheckNumber(_nums, _numsSize, _i+1, _expTotal, catTotal) == 1) { printf("cat "); return 1; }
     return 0;
 }
 
