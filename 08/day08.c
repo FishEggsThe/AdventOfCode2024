@@ -12,9 +12,18 @@ void TrimLine(char _line[LINESIZE]) {
         _line[length-1] = 0;
 }
 
-void PrintGrid(char _grid[GRIDSIZE][GRIDSIZE+1], int _gridSize) {
-    for(int i = 0; i < _gridSize; i++)
-        printf("%s\n", _grid[i]);
+void PrintGrid(char _grid[GRIDSIZE][GRIDSIZE+1], char _signalGrid[GRIDSIZE][GRIDSIZE+1], int _gridSize) {
+    char nextChar;
+    for(int i = 0; i < _gridSize; i++) {
+        for(int j = 0; j < _gridSize; j++) {
+            if (_grid[i][j] == '.')
+                nextChar = _signalGrid[i][j];
+            else
+                nextChar = _grid[i][j];
+            printf("%c", nextChar);
+        }
+        printf("\n");
+    }
 }
 
 int FindLetter(char _letter, char _letters[MAXSIZE], int _lettersSize) {
@@ -26,17 +35,22 @@ int FindLetter(char _letter, char _letters[MAXSIZE], int _lettersSize) {
 }
 
 void ConfirmSignal(int _coords[MAXSIZE][2], int _i, int _j, char _signalGrid[GRIDSIZE][GRIDSIZE+1], int _gridSize, int *_total) {
-    int increments[2];
-    increments[0] = 2*_coords[_i][0] - _coords[_j][0];
-    increments[1] = 2*_coords[_i][1] - _coords[_j][1];
+    int increments[2], newPos[2];
+    increments[0] = _coords[_i][0] - _coords[_j][0];
+    increments[1] = _coords[_i][1] - _coords[_j][1];
+    newPos[0] = _coords[_i][0];// + increments[0];
+    newPos[1] = _coords[_i][1];// + increments[1];
 
-    if (increments[1] >= 0 && increments[1] < _gridSize && 
-        increments[0] >= 0 && increments[0] < _gridSize) {
-        if (_signalGrid[increments[1]][increments[0]] != '#') {
-            _signalGrid[increments[1]][increments[0]] = '#';
-            printf("%d, %d (%d, %d)\n", increments[1], increments[0], _coords[_i][0], _coords[_i][1]);
+    
+    while (newPos[1] >= 0 && newPos[1] < _gridSize && 
+        newPos[0] >= 0 && newPos[0] < _gridSize) {
+        if (_signalGrid[newPos[1]][newPos[0]] != '#') {
+            _signalGrid[newPos[1]][newPos[0]] = '#';
+            printf("%d, %d (%d, %d)\n", newPos[1], newPos[0], _coords[_i][0], _coords[_i][1]);
             *_total += 1;
         }
+        newPos[0] += increments[0];
+        newPos[1] += increments[1];
     }
 }
 
@@ -105,7 +119,7 @@ int main() {
         }
     }
     
-    PrintGrid(grid, gridSize);
+    PrintGrid(grid, signalGrid, gridSize);
     printf("total: %d\n", total);
     return 0;
 }
