@@ -43,22 +43,26 @@ void FindAllValidPaths(struct xyPos _pos, int *_total) {
     // Check for each direction
     for(int m = 0; m < 4; m++) {
         struct xyPos nextPos = CreatePos(_pos.x+dir[m][0], _pos.y+dir[m][1]);
+        if (nextPos.y < 0 || nextPos.y >= gridSize || nextPos.x < 0 || nextPos.x >= gridSize) { continue; }
         int nextNum = grid[nextPos.y][nextPos.x] - 48;
 
         // If the next value (in that direction) is incremental from the last
         if(nextNum == currNum+1) {
             // If that next number is a 9
             if (nextNum >= 9) {
+                // My face when star 2 feels like a star 1 solution 
                 // Checking if it hasn't already been found
-                int check = 1;
-                for(int n = 0; n < 4; n++) {
-                    if (nextPos.x == endPoints[n].x && nextPos.y == endPoints[n].y) { check = 0; break; }
-                }
-                if (check) {
-                    endPoints[endPointsSize] = CreatePos(nextPos.x, nextPos.y);
-                    endPointsSize++;
-                    *_total += 1;
-                }
+                // int check = 1;
+                // for(int n = 0; n < endPointsSize; n++) {
+                //     if (nextPos.x == endPoints[n].x && nextPos.y == endPoints[n].y) { check = 0; break; }
+                // }
+                // if (check) {
+                //     endPoints[endPointsSize] = CreatePos(nextPos.x, nextPos.y);
+                //     // printf("(%d, %d) -> (%d, %d)\n", _pos.x, _pos.y, endPoints[endPointsSize].x, endPoints[endPointsSize].y);
+                //     endPointsSize++;
+                //     *_total += 1;
+                // }
+                *_total += 1;
             }
             else { FindAllValidPaths(nextPos, _total); }
         }
@@ -90,7 +94,7 @@ int main() {
         for(int j = 0; j < gridSize; j++) {
             if (grid[i][j] == '0') {
                 startPoints[startPointsSize] = CreatePos(j, i);
-                printf("%d, %d\n", startPoints[startPointsSize].x, startPoints[startPointsSize].y);
+                // printf("%d, %d\n", startPoints[startPointsSize].x, startPoints[startPointsSize].y);
                 startPointsSize++;
             }
         }
@@ -100,8 +104,12 @@ int main() {
     // Find all valid paths
     for(int i = 0; i < startPointsSize; i++) {
         int lastTotal = total;
+        // printf("Index: %d (%d, %d) \n", i, startPoints[i].x, startPoints[i].y);
         FindAllValidPaths(startPoints[i], &total);
-        printf("%d ", total-lastTotal);
+        // printf("Total: %d\n", total-lastTotal);
+        // for(int j = 0; j < endPointsSize; j++)
+        //     printf("(%d, %d), ", endPoints[j].x, endPoints[j].y);
+        // printf("\n\n");
         memset(endPoints, 0, sizeof(endPoints[0]) * LINESIZE * LINESIZE);
         endPointsSize = 0;
     }
