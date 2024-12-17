@@ -16,8 +16,8 @@ struct xyPos CreatePos(int _x, int _y) {
 }
 
 char grid[LINESIZE][LINESIZE];
-int gridSize = 0, total = 0, startPointsSize = 0;
-struct xyPos startPoints[LINESIZE];
+int gridSize = 0, startPointsSize = 0, endPointsSize = 0;
+struct xyPos startPoints[LINESIZE*LINESIZE], endPoints[LINESIZE*LINESIZE];
 
 void TrimLine(char _line[LINESIZE]) {
     int length = strlen(_line);
@@ -32,26 +32,45 @@ void PrintGrid() {
     printf("\n");
 }
 
-int FindAllValidPaths(struct xyPos _pos, int *_total) {
-    int currNum = grid[_pos.y][_pos.x] - 48;
-    if (currNum >= 9) { *_total += 1; return 1; }
-
-    int dir[4][2] = {{1, 0},
+void FindAllValidPaths(struct xyPos _pos, int *_total) {
+    // Set up variables
+    int currNum = grid[_pos.y][_pos.x] - 48,
+        dir[4][2] = {{1, 0},
                      {0, 1},
                      {-1, 0},
                      {0, -1},};
+
+    // Check for each direction
     for(int m = 0; m < 4; m++) {
         struct xyPos nextPos = CreatePos(_pos.x+dir[m][0], _pos.y+dir[m][1]);
         int nextNum = grid[nextPos.y][nextPos.x] - 48;
-        if(nextNum == currNum+1) { return FindAllValidPaths(nextPos, _total); }
+
+        // If the next value (in that direction) is incremental from the last
+        if(nextNum == currNum+1) {
+            // If that next number is a 9
+            if (nextNum >= 9) {
+                // Checking if it hasn't already been found
+                int check = 1;
+                for(int n = 0; n < 4; n++) {
+                    if (nextPos.x == endPoints[n].x && nextPos.y == endPoints[n].y) { check = 0; break; }
+                }
+                if (check) {
+                    endPoints[endPointsSize] = CreatePos(nextPos.x, nextPos.y);
+                    endPointsSize++;
+                    *_total += 1;
+                }
+            }
+            else { FindAllValidPaths(nextPos, _total); }
+        }
     }
-    return 0;
+    // return 0;
 }
 
 int main() {
     // Variables
     FILE *file;
     char line[LINESIZE];
+    int total = 0;
 
     // Opening input file
     file = fopen("input.txt", "r");
@@ -76,11 +95,17 @@ int main() {
             }
         }
     }
+    printf("\n");
 
     // Find all valid paths
     for(int i = 0; i < startPointsSize; i++) {
+        int lastTotal = total;
         FindAllValidPaths(startPoints[i], &total);
+        printf("%d ", total-lastTotal);
+        memset(endPoints, 0, sizeof(endPoints[0]) * LINESIZE * LINESIZE);
+        endPointsSize = 0;
     }
+    printf("\n");
     
     printf("total: %d\n", total);
     return 0;
