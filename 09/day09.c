@@ -5,29 +5,106 @@
 #include <limits.h>
 #define LINESIZE 20001
 
+void PrintDiskMap(int _diskMap[LINESIZE][2], int _diskSize) {
+    for (int i = 0; i < _diskSize; i++) {
+        for (int j = 0; j < _diskMap[i][1]; j++) {
+            if (_diskMap[i][0] == -1) {
+                printf("."); continue;
+            }
+            printf("%d", _diskMap[i][0]);
+        }
+    }
+    printf("\n");
+
+    for (int i = 0; i < _diskSize; i++)
+        printf("%d (%d)\n", _diskMap[i][0], _diskMap[i][1]);
+    printf("Array Size: %d\n\n", _diskSize);
+}
+
 void FillDiskMap(int _diskMap[LINESIZE][2], int _num, int _size, int _i) {
     _diskMap[_i][0] = _num;
     _diskMap[_i][1] = _size;
 }
 
-void ArrangeDiskMap(int _diskMap[LINESIZE][2], int _diskSize, u_int64_t *_total) {
-    int j = _diskSize-1, currNum = 0;
-    // Go through each number
-    for(int i = 0; i < _diskSize; i++) {
-        while(_diskMap[i][1] > 0) {
-            int trueI = i, check = _diskMap[i][0] == -1;
-            while (check) {
-                if (_diskMap[j][0] != -1 && _diskMap[j][1] > 0) { trueI = j; break; }
-                if (j <= i) { return; }
-                j--;
-            }
+// Thanks stackoverflow user 
+void remove_element(int array[LINESIZE][2], int index, int *array_length)
+{
+    int i;
+    for(i = index; i < *array_length - 1; i++) {
+        array[i][0] = array[i + 1][0];
+        array[i][1] = array[i + 1][1];
+    }
+    *array_length-=1;
+}
 
-            *_total += currNum * _diskMap[trueI][0];
-            _diskMap[trueI][1]--; currNum++;
-            if (check) { _diskMap[i][1]--; }
-            printf("%d: %d (%d)\n", currNum, _diskMap[trueI][0], _diskMap[trueI][1]);
+// FUCK YOU stackoverflow user 
+void add_element(int insert[2], int array[LINESIZE][2], int index, int *array_length)
+{
+    int num = insert[0], size = insert[1];
+    int i;
+    for(i = *array_length; i >= index; i--) {
+        array[i+1][0] = array[i][0];
+        array[i+1][1] = array[i][1];
+    }
+    array[index][0] = num;
+    array[index][1] = size;
+    *array_length+=1;
+}
+
+void JoinEmptySpace(int array[LINESIZE][2], int _i, int *array_length) {
+    for (int k = _i; k < *array_length; k++) {
+        if (array[k][0] <= -1) {
+            // printf("%d\n", k);
+            while (k+1 < *array_length && array[k+1][0] <= -1) {
+                array[k][1] += array[k+1][1];
+                remove_element(array, k+1, array_length);
+            }
         }
     }
+}
+
+void GetTotal(int array[LINESIZE][2], int array_length, u_int64_t *_total) {
+    int currNum = 0;
+    for (int m = 0; m < array_length; m++) {
+        for (int n = 0; n < array[m][1]; n++) {
+            if (array[m][0] > -1)
+                *_total += array[m][0] * currNum;
+            currNum++;
+        }
+    }
+}
+
+void ArrangeDiskMap(int _diskMap[LINESIZE][2], int *_diskSize) {
+    // Starting backwards
+    for (int j = *_diskSize-1; j > 1; j--) {
+        // If a row with numbers
+        if (_diskMap[j][0] > -1) {
+            printf(" * %d (%d)\n", _diskMap[j][0], _diskMap[j][1]);
+            // Start to end
+            for (int i = 1; i < j; i++) {
+                // Checking if empty space has space for number(s)
+                if (_diskMap[i][0] <= -1 && _diskMap[j][1] <= _diskMap[i][1]) {
+                    add_element(_diskMap[j], _diskMap, i, _diskSize);
+                    _diskMap[j+1][0] = -1;
+
+                    _diskMap[i+1][1] -= _diskMap[i][1];
+                    if (_diskMap[i+1][1] <= 0) {
+                        remove_element(_diskMap, i+1, _diskSize);
+                    }
+                    // printf("found :3\n");
+
+                    // Making sure the array isn't bloated
+                    JoinEmptySpace(_diskMap, i, _diskSize);
+
+                    // Check for if the do while should loop ONE more time
+                    // return;
+                    // PrintDiskMap(_diskMap, *_diskSize);
+                    break;
+                }
+            }
+        }
+    }
+    printf("\n");
 }
 
 int main() {
@@ -56,15 +133,13 @@ int main() {
         diskSize++;
     }
     printf("Disk created\n");
-    for (int i = 0; i < diskSize; i++)
-        printf("%d (%d)\n", diskMap[i][0], diskMap[i][1]);
-    printf("\n");
-
 
     // Fill Disk Map empty spaces and add to total at the same time >:3
-    ArrangeDiskMap(diskMap, diskSize, &total);
-    printf("\n");
-    
+    ArrangeDiskMap(diskMap, &diskSize);
+    // PrintDiskMap(diskMap, diskSize);
+
+    // GET THE TOTAL FINALLY
+    GetTotal(diskMap, diskSize, &total);
     printf("total: %llu\n", total);
     return 0;
 }
