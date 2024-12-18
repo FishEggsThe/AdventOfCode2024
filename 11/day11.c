@@ -7,8 +7,7 @@
 #define LINESIZE 300000
 
 u_int64_t rockLine[LINESIZE];
-int rockLineSize;
-int blinks = 25;
+int rockLineSize, blinks = 25, allTotals[25];
 
 void TrimLine(char _line[LINESIZE]) {
     int length = strlen(_line);
@@ -101,6 +100,7 @@ int main() {
             BlinkRocks();
             printf("\nBlink #%d ", b);
             PrintLine();
+            allTotals[b-1] = rockLineSize;
         }
 
         fclose(file);
@@ -108,5 +108,16 @@ int main() {
     printf("\n");
     
     printf("total: %d\n", rockLineSize);
+    
+    file = fopen("output.txt", "w");
+    if (file)
+    {
+        for(int i = 0; i < blinks; i++) {
+            printf("%d ", allTotals[i]);
+            fprintf(file, "%d ", allTotals[i]);
+        }
+    }
+    fclose(file);
+    
     return 0;
 }
