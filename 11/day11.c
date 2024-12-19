@@ -4,10 +4,11 @@
 #include <assert.h>
 #include <math.h>
 #include <limits.h>
-#define LINESIZE 300000
+#define LINESIZE 1024
+#define ARRAYSIZE 7245000000
 
-u_int64_t rockLine[LINESIZE];
-int rockLineSize, blinks = 25, allTotals[25];
+u_int64_t rockLine[ARRAYSIZE], firstHalf, secondHalf, multiplySN;
+int rockLineSize, blinks = 75, allTotals[25];
 
 void TrimLine(char _line[LINESIZE]) {
     int length = strlen(_line);
@@ -18,11 +19,11 @@ void TrimLine(char _line[LINESIZE]) {
 void PrintLine() {
     // for(int i = 0; i < rockLineSize; i++)
         // printf("%llu ", rockLine[i]);
-    printf("Total: %d\n\n", rockLineSize);
+    printf("Total: %d\n", rockLineSize);
 }
 
 // FUCK YOU stackoverflow user 
-void add_element(int insert, u_int64_t array[LINESIZE], int index, int *array_length)
+void add_element(int insert, u_int64_t array[ARRAYSIZE], int index, int *array_length)
 {
     int i;
     for(i = *array_length; i >= index; i--) {
@@ -51,7 +52,7 @@ void BlinkRocks() {
         }
         if(digitNum % 2 == 0) {
             // printf("Even number of digits\n");
-            u_int64_t firstHalf, secondHalf, multiplySN = 1;
+            multiplySN = 1;
             for(int i = 0; i < digitNum/2; i++)
                 multiplySN *= 10;
             
@@ -108,16 +109,6 @@ int main() {
     printf("\n");
     
     printf("total: %d\n", rockLineSize);
-    
-    file = fopen("output.txt", "w");
-    if (file)
-    {
-        for(int i = 0; i < blinks; i++) {
-            printf("%d ", allTotals[i]);
-            fprintf(file, "%d ", allTotals[i]);
-        }
-    }
-    fclose(file);
     
     return 0;
 }

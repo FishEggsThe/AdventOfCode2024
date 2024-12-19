@@ -6,7 +6,7 @@
 #include <limits.h>
 #define LINESIZE 300000
 
-u_int64_t totals[LINESIZE];
+int totals[25], diffTotals[24];
 int totalsSize = 25;
 
 void TrimLine(char _line[LINESIZE]) {
@@ -15,22 +15,21 @@ void TrimLine(char _line[LINESIZE]) {
         _line[length-1] = 0;
 }
 
-void PrintLine() {
-    for(int i = 0; i < totalsSize; i++)
-        printf("%llu ", totals[i]);
-    printf("Total: %d\n\n", totalsSize);
+void PrintLine(int _array[], int size) {
+    for(int i = 0; i < size; i++)
+        printf("%d ", _array[i]);
+    // printf("Total: %d\n", size);
 }
 
 int main() {
     // Variables
     FILE *file;
     char line[LINESIZE];
-    int total = 0;
+    int total = 0, index;
 
     // Opening input file
     file = fopen("output.txt", "r");
     if (file) {
-        int index;
         // Getting the next line
         fgets(line, LINESIZE, file);
         TrimLine(line);
@@ -39,13 +38,16 @@ int main() {
             totals[index] = atoi(token);
             token = strtok(NULL, "  ");
         }
-        PrintLine();
+        PrintLine(totals, totalsSize);
 
         fclose(file);
     }
     printf("\n");
-    
-    // printf("total: %d\n", totalsSize);
+
+    for(index = 0; index < 24; index++) {
+        diffTotals[index] = totals[index+1] - totals[index];
+    }
+    PrintLine(diffTotals, 24);
     
     return 0;
 }
