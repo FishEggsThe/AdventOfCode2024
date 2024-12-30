@@ -104,8 +104,6 @@ void FindFencePerimeter() {
         for(int j = i%2 == 0; j < fenceGridSize; j+=2) {
             // Check if fence point has already been checked
             if(fenceGrid[i][j].checked == 0 && fenceGrid[i][j].type != ' ') {
-                // printf("%d, %d\n", i, j);
-            // if (fenceGrid[j][i].type == '-' || fenceGrid[j][i].type == '|') {
                 char fence = fenceGrid[i][j].type;
                 int direction[2] = {fence == '-', fence == '|'}, k = 0, inc[2];
                 // Checking how long the fence is and checking each part of it then adding to perimeter
@@ -113,15 +111,22 @@ void FindFencePerimeter() {
                     inc[0] = i+k*direction[1];
                     inc[1] = j+k*direction[0];
                     if(fenceGrid[inc[0]][inc[1]].type != fence) { break; }
-                    if(0) { break; }
+                    // printf("%d, %d\t-> *", inc[0], inc[1]);
+                    if(k > 0) {
+                        if(fence == '-') {
+                            // printf("%c %c*\n", fenceGrid[inc[0]-1][inc[1]-1].type, fenceGrid[inc[0]+1][inc[1]-1].type);
+                            if(fenceGrid[inc[0]-1][inc[1]-1].type == '|' && fenceGrid[inc[0]+1][inc[1]-1].type == '|') { break; }
+                        } if(fence == '|') {
+                            // printf("%c %c*\n", fenceGrid[inc[0]-1][inc[1]-1].type, fenceGrid[inc[0]-1][inc[1]+1].type);
+                            if(fenceGrid[inc[0]-1][inc[1]-1].type == '-' && fenceGrid[inc[0]-1][inc[1]+1].type == '-') { break; }
+                        }
+                    }
 
                     fenceGrid[inc[0]][inc[1]].checked = 1;
-                    // printf("%d, %d\n", inc[0], inc[1]);
                     k+=2;
                 } while(inc[0] < fenceGridSize && inc[1] < fenceGridSize);
+                printf("\n");
                 perimeter++;
-                // PrintFenceGrid();
-                // printf("%d ", perimeter);
             }
         }
     }
@@ -163,7 +168,7 @@ int main() {
             if (grid[i][j].checked != 1) {
                 ResetFenceGrid();
                 FindFenceSize(j, i);
-                PrintFenceGrid();
+                // PrintFenceGrid();
                 FindFencePerimeter();
 
                 total += area * perimeter;
