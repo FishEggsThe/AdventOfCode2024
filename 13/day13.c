@@ -40,6 +40,21 @@ void PressButton(struct clawMachine _claw, char _button) {
     _claw.prizeCoords[1] += _claw.buttons[buttonPressed].yInc;
 }
 
+void GetNumbers(int _i, char _line[LINESIZE], int _coords[3][2]) {
+    int offset = _i == 2 ? 9 : 12, i, j, k;
+    char currNum[64];
+
+    for(j = offset; j < strlen(_line); j++) {
+        // Scraping the number
+        i = 0, k = 0;
+        while(_line[j+i] >= '0' && _line[j+i] <= '9') {
+            currNum[k] = _line[i]; k++; i++;
+        }
+        j += i;
+    }
+    
+}
+
 int main() {
     // Variables
     FILE *file;
@@ -49,14 +64,21 @@ int main() {
     // Opening input file
     file = fopen("input.txt", "r");
     if (file) {
-        int coords[3][2], i = 0;
-        char currNum[64];
+        int coords[3][2];
         // Getting the next line
         while (fgets(line, LINESIZE, file)) {
-            // Get Number on spot
-            while(line[i] >= '0' && line[i] <= '9') {
-                currNum[i] = line[i]; i++;
-            }
+            // Button A
+            GetNumbers(0, line, coords);
+
+            // Button B
+            fgets(line, LINESIZE, file);
+            GetNumbers(1, line, coords);
+
+            // Prize Coordinates
+            fgets(line, LINESIZE, file);
+            GetNumbers(2, line, coords);
+
+            numOfClawMachines++;
         }
         fclose(file);
     }
