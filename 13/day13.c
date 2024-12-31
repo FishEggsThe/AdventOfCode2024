@@ -41,15 +41,20 @@ void PressButton(struct clawMachine _claw, char _button) {
 }
 
 void GetNumbers(int _i, char _line[LINESIZE], int _coords[3][2]) {
-    int offset = _i == 2 ? 9 : 12, i, j, k;
+                                // So many integers ik lol
+    int offset = _i == 2 ? 9 : 12, i, j, k, l;
     char currNum[64];
 
-    for(j = offset; j < strlen(_line); j++) {
-        // Scraping the number
-        i = 0, k = 0;
-        while(_line[j+i] >= '0' && _line[j+i] <= '9') {
-            currNum[k] = _line[i]; k++; i++;
+    for(i = offset; i < strlen(_line); i++) {
+        // Scraping the number off the pan
+        j = 0, k = 0, l = 0;
+        while(_line[i+j] >= '0' && _line[i+j] <= '9') {
+            currNum[k] = _line[i+j]; k++; j++;
         }
+        if(k > 0) {
+            _coords[_i][l] = atoi(currNum); l++;
+        }
+
         j += i;
     }
     
@@ -64,7 +69,7 @@ int main() {
     // Opening input file
     file = fopen("input.txt", "r");
     if (file) {
-        int coords[3][2];
+        int coords[3][2], index = 0;;
         // Getting the next line
         while (fgets(line, LINESIZE, file)) {
             // Button A
@@ -78,11 +83,20 @@ int main() {
             fgets(line, LINESIZE, file);
             GetNumbers(2, line, coords);
 
-            numOfClawMachines++;
+            // Adding to claw machine array
+            clawMachines[index] = CreateClawMachine(coords[0], coords[1], coords[2]);
+            index++; numOfClawMachines++;
         }
         fclose(file);
     }
     printf("\n");
+
+    for(int i = 0; i < numOfClawMachines; i++) {
+        printf("Button A: X+%d, Y+%d\n", clawMachines[i].buttons[0].xInc, clawMachines[i].buttons[0].yInc);
+        printf("Button B: X+%d, Y+%d\n", clawMachines[i].buttons[1].xInc, clawMachines[i].buttons[1].yInc);
+        printf("Prize: X=%d, Y=%d\n", clawMachines[i].prizeCoords[0], clawMachines[i].prizeCoords[1]);
+        printf("\n");
+    }
     
     printf("total: %d\n", total);
     return 0;
