@@ -14,7 +14,8 @@ struct clawMachine {
 };
 
 struct clawMachine clawMachines[LINESIZE];
-int numOfClawMachines = 0;
+int lowestWinningTokenAmount,
+numOfClawMachines = 0;
 
 struct clawMachine CreateClawMachine(int _buttonA[2], int _buttonB[2], int _prizeCoords[2]) {
     struct clawMachine claw;
@@ -33,13 +34,25 @@ struct clawMachine CreateClawMachine(int _buttonA[2], int _buttonB[2], int _priz
     
     return claw;
 }
-
-void PressButton(struct clawMachine _claw, char _button) {
-    int buttonPressed = _button == 'B';
-    _claw.prizeCoords[0] += _claw.buttons[buttonPressed].xInc;
-    _claw.prizeCoords[1] += _claw.buttons[buttonPressed].yInc;
+// struct clawMachine functions
+int GetButton(char _button, char _axis, struct clawMachine _claw) {
+    int buttonPressed = _button - 'a';
+    if(_axis == 'x')
+        return _claw.buttons[buttonPressed].xInc;
+    else if(_axis == 'y')
+        return _claw.buttons[buttonPressed].yInc;
+    return -1;
+}
+int CheckIfPrizeWon(struct clawMachine _claw, int _x, int _y) {
+    return _x == _claw.prizeCoords[0]
+        && _y == _claw.prizeCoords[1];
+}
+int CheckIfPrizeOvershot(struct clawMachine _claw, int _x, int _y) {
+    return _x > _claw.prizeCoords[0]
+        || _y > _claw.prizeCoords[1];
 }
 
+// For reading the dumb stupid lines from the input.txt file so stupid
 void GetNumbers(int _i, char _line[LINESIZE], int _coords[3][2]) {
                                 // So many integers ik lol
     int offset = _i == 2 ? 9 : 12, i, j, k = 0;
@@ -60,6 +73,38 @@ void GetNumbers(int _i, char _line[LINESIZE], int _coords[3][2]) {
     }
     
 }
+// Functions for how many wins you get at a claw machine
+int CheckIfLowestTokens(int _tokens) {
+    return _tokens < lowestWinningTokenAmount;
+}
+void SetWin(int _tokens) {
+    lowestWinningTokenAmount = _tokens;
+}
+void ResetWin() {
+    lowestWinningTokenAmount = 0;
+}
+
+// Shifting through all claw machines
+void AttemptClawMachine(int _tokens, struct clawMachine _claw, int _x, int _y) {
+    // Checking is exceeding current lowest winning token amount
+    if(CheckIfLowestTokens(_tokens)) { return; }
+    // Check Claw Position if won or overshot
+    if(CheckIfPrizeWon(_claw, _x, _y) == 1) {
+        SetWin(_tokens);
+        printf("Lowest Score: %d\n", lowestWinningTokenAmount);
+        return;
+    }
+    if(CheckIfPrizeOvershot(_claw, _x, _y) == 1) { return; }
+
+    int tk[2] = {3, 1}, bt[2] = {'a', 'b'}, ax[2] = {'x', 'y'}, xAdd, yAdd;
+    // check a press path
+    for(int i = 0; i < 2; i++) {
+        xAdd = _x + GetButton(bt[i], ax[0], _claw);
+        yAdd = _y + GetButton(bt[i], ax[1], _claw);
+        // printf("%d, %d\n", xAdd, yAdd);
+        AttemptClawMachine(_tokens+tk[i], _claw, xAdd, yAdd);
+    }
+}
 
 int main() {
     // Variables
@@ -70,7 +115,7 @@ int main() {
     // Opening input file
     file = fopen("input.txt", "r");
     if (file) {
-        int coords[3][2], index = 0;;
+        int coords[3][2], index = 0;
         // Getting the next line
         while (fgets(line, LINESIZE, file)) {
             // Button A
@@ -100,6 +145,15 @@ int main() {
         printf("Button B: X+%d, Y+%d\n", clawMachines[i].buttons[1].xInc, clawMachines[i].buttons[1].yInc);
         printf("Prize: X=%d, Y=%d\n", clawMachines[i].prizeCoords[0], clawMachines[i].prizeCoords[1]);
         printf("\n");
+    }
+
+    // int totalTokens;
+    for(int i = 0; i < numOfClawMachines; i++) {
+        AttemptClawMachine(0, clawMachines[i], 0, 0);
+        // printf("All wins for Claw Machine %d: %d\n", i, lowestWinningTokenAmount);
+        total += lowestWinningTokenAmount;
+        ResetWin();
+        // break;
     }
     
     printf("total: %d\n", total);
