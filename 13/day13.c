@@ -42,20 +42,21 @@ void PressButton(struct clawMachine _claw, char _button) {
 
 void GetNumbers(int _i, char _line[LINESIZE], int _coords[3][2]) {
                                 // So many integers ik lol
-    int offset = _i == 2 ? 9 : 12, i, j, k, l;
+    int offset = _i == 2 ? 9 : 12, i, j, k = 0;
     char currNum[64];
 
     for(i = offset; i < strlen(_line); i++) {
         // Scraping the number off the pan
-        j = 0, k = 0, l = 0;
+        j = 0;
         while(_line[i+j] >= '0' && _line[i+j] <= '9') {
-            currNum[k] = _line[i+j]; k++; j++;
+            currNum[j] = _line[i+j]; j++;
         }
-        if(k > 0) {
-            _coords[_i][l] = atoi(currNum); l++;
+        if(j > 0) {
+            _coords[_i][k] = atoi(currNum); k++;
+            memset(currNum, 0, sizeof(currNum));
         }
 
-        j += i;
+        i += j;
     }
     
 }
@@ -82,6 +83,9 @@ int main() {
             // Prize Coordinates
             fgets(line, LINESIZE, file);
             GetNumbers(2, line, coords);
+
+            // for reading shenanigans whatever
+            fgets(line, LINESIZE, file);
 
             // Adding to claw machine array
             clawMachines[index] = CreateClawMachine(coords[0], coords[1], coords[2]);
