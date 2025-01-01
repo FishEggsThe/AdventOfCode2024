@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <limits.h>
 #define LINESIZE 1024
 
 struct button {
@@ -10,23 +11,22 @@ struct button {
 
 struct clawMachine {
     struct button buttons[2];
-    int prizeCoords[2];
+    int64_t prizeCoords[2];
 };
 
 struct clawMachine clawMachines[LINESIZE];
-int lowestWinningTokenAmount,
-numOfClawMachines = 0;
+int numOfClawMachines = 0;
 
-struct clawMachine CreateClawMachine(int _buttonA[2], int _buttonB[2], int _prizeCoords[2]) {
+struct clawMachine CreateClawMachine(int64_t _buttonA[2], int64_t _buttonB[2], int64_t _prizeCoords[2]) {
     struct clawMachine claw;
 
     // A Button
-    claw.buttons[0].xInc = _buttonA[0];
-    claw.buttons[0].yInc = _buttonA[1];
+    claw.buttons[0].xInc = (int)_buttonA[0];
+    claw.buttons[0].yInc = (int)_buttonA[1];
 
     // B Button
-    claw.buttons[1].xInc = _buttonB[0];
-    claw.buttons[1].yInc = _buttonB[1];
+    claw.buttons[1].xInc = (int)_buttonB[0];
+    claw.buttons[1].yInc = (int)_buttonB[1];
 
     // Prize Coordinates
     claw.prizeCoords[0] = _prizeCoords[0];
@@ -43,20 +43,14 @@ int GetButton(char _button, char _axis, struct clawMachine _claw) {
         return _claw.buttons[buttonPressed].yInc;
     return -1;
 }
-int CheckIfPrizeWon(struct clawMachine _claw, int _x, int _y) {
-    return _x == _claw.prizeCoords[0]
-        && _y == _claw.prizeCoords[1];
-}
-int CheckIfPrizeOvershot(struct clawMachine _claw, int _x, int _y) {
-    return _x > _claw.prizeCoords[0]
-        || _y > _claw.prizeCoords[1];
-}
 
 // For reading the dumb stupid lines from the input.txt file so stupid
-void GetNumbers(int _i, char _line[LINESIZE], int _coords[3][2]) {
+void GetNumbers(int _i, char _line[LINESIZE], int64_t _coords[3][2]) {
                                 // So many integers ik lol
     int offset = _i == 2 ? 9 : 12, i, j, k = 0;
     char currNum[64];
+    char* endPtr;
+    int base;
 
     for(i = offset; i < strlen(_line); i++) {
         // Scraping the number off the pan
@@ -65,7 +59,7 @@ void GetNumbers(int _i, char _line[LINESIZE], int _coords[3][2]) {
             currNum[j] = _line[i+j]; j++;
         }
         if(j > 0) {
-            _coords[_i][k] = atoi(currNum); k++;
+            _coords[_i][k] = strtoll(currNum, &endPtr, base); k++;
             memset(currNum, 0, sizeof(currNum));
         }
 
@@ -73,23 +67,13 @@ void GetNumbers(int _i, char _line[LINESIZE], int _coords[3][2]) {
     }
     
 }
-// Functions for how many wins you get at a claw machine
-int CheckIfLowestTokens(int _tokens) {
-    return _tokens < lowestWinningTokenAmount;
-}
-void SetWin(int _tokens) {
-    lowestWinningTokenAmount = _tokens;
-}
-void ResetWin() {
-    lowestWinningTokenAmount = 0;
-}
 
 // Fuck yeah math
 void AttemptClawMachine(struct clawMachine _claw, int *_total) {
     const int matrix[2][2] = {{GetButton('a', 'x', _claw), GetButton('a', 'y', _claw)}, 
-                              {GetButton('b', 'x', _claw), GetButton('b', 'y', _claw)}},
-              sum[2] = {_claw.prizeCoords[0], _claw.prizeCoords[1]};
-    int determinant, xDeterminant, yDeterminant, x, y;
+                              {GetButton('b', 'x', _claw), GetButton('b', 'y', _claw)}};
+    const int64_t sum[2] = {_claw.prizeCoords[0], _claw.prizeCoords[1]};
+    int64_t determinant, xDeterminant, yDeterminant, x, y;
 
     determinant = matrix[0][0]*matrix[1][1] - matrix[0][1]*matrix[1][0];
     xDeterminant = sum[0]*matrix[1][1] - sum[1]*matrix[1][0];
@@ -112,7 +96,7 @@ int main() {
     // Opening input file
     file = fopen("input.txt", "r");
     if (file) {
-        int coords[3][2], index = 0;
+        int64_t coords[3][2], index = 0;
         // Getting the next line
         while (fgets(line, LINESIZE, file)) {
             // Button A
@@ -140,16 +124,12 @@ int main() {
     for(int i = 0; i < numOfClawMachines; i++) {
         printf("Button A: X+%d, Y+%d\n", clawMachines[i].buttons[0].xInc, clawMachines[i].buttons[0].yInc);
         printf("Button B: X+%d, Y+%d\n", clawMachines[i].buttons[1].xInc, clawMachines[i].buttons[1].yInc);
-        printf("Prize: X=%d, Y=%d\n", clawMachines[i].prizeCoords[0], clawMachines[i].prizeCoords[1]);
+        printf("Prize: X=%lld, Y=%lld\n", clawMachines[i].prizeCoords[0], clawMachines[i].prizeCoords[1]);
         printf("\n");
     }
 
-    // int totalTokens;
     for(int i = 0; i < numOfClawMachines; i++) {
-        // printf("All wins for Claw Machine %d: %d\n", i, lowestWinningTokenAmount);
         AttemptClawMachine(clawMachines[i], &total);
-        ResetWin();
-        // break;
     }
     
     printf("total: %d\n", total);
