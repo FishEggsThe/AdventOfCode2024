@@ -84,26 +84,23 @@ void ResetWin() {
     lowestWinningTokenAmount = 0;
 }
 
-// Shifting through all claw machines
-void AttemptClawMachine(int _tokens, struct clawMachine _claw, int _x, int _y) {
-    // Checking is exceeding current lowest winning token amount
-    if(CheckIfLowestTokens(_tokens)) { return; }
-    // Check Claw Position if won or overshot
-    if(CheckIfPrizeWon(_claw, _x, _y) == 1) {
-        SetWin(_tokens);
-        printf("Lowest Score: %d\n", lowestWinningTokenAmount);
-        return;
-    }
-    if(CheckIfPrizeOvershot(_claw, _x, _y) == 1) { return; }
+// Fuck yeah math
+void AttemptClawMachine(struct clawMachine _claw, int *_total) {
+    const int matrix[2][2] = {{GetButton('a', 'x', _claw), GetButton('a', 'y', _claw)}, 
+                              {GetButton('b', 'x', _claw), GetButton('b', 'y', _claw)}},
+              sum[2] = {_claw.prizeCoords[0], _claw.prizeCoords[1]};
+    int determinant, xDeterminant, yDeterminant, x, y;
 
-    int tk[2] = {3, 1}, bt[2] = {'a', 'b'}, ax[2] = {'x', 'y'}, xAdd, yAdd;
-    // check a press path
-    for(int i = 0; i < 2; i++) {
-        xAdd = _x + GetButton(bt[i], ax[0], _claw);
-        yAdd = _y + GetButton(bt[i], ax[1], _claw);
-        // printf("%d, %d\n", xAdd, yAdd);
-        AttemptClawMachine(_tokens+tk[i], _claw, xAdd, yAdd);
-    }
+    determinant = matrix[0][0]*matrix[1][1] - matrix[0][1]*matrix[1][0];
+    xDeterminant = sum[0]*matrix[1][1] - sum[1]*matrix[1][0];
+    yDeterminant = matrix[0][0]*sum[1] - matrix[0][1]*sum[0];
+    x = xDeterminant/determinant; y = yDeterminant/determinant;
+
+    // printf("D: %d\nDx: %d\nDy: %d\n", determinant, xDeterminant, yDeterminant);
+    // printf("x: %d\nyx: %d\n\n", x, y);
+
+    if(matrix[0][0]*x + matrix[1][0]*y == sum[0] && matrix[0][1]*x + matrix[1][1]*y == sum[1])
+        *_total += x*3 + y;
 }
 
 int main() {
@@ -149,9 +146,8 @@ int main() {
 
     // int totalTokens;
     for(int i = 0; i < numOfClawMachines; i++) {
-        AttemptClawMachine(0, clawMachines[i], 0, 0);
         // printf("All wins for Claw Machine %d: %d\n", i, lowestWinningTokenAmount);
-        total += lowestWinningTokenAmount;
+        AttemptClawMachine(clawMachines[i], &total);
         ResetWin();
         // break;
     }
