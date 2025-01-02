@@ -51,6 +51,7 @@ void GetNumbers(int _i, char _line[LINESIZE], int64_t _coords[3][2]) {
     char currNum[64];
     char* endPtr;
     int base;
+    //10000000000000
 
     for(i = offset; i < strlen(_line); i++) {
         // Scraping the number off the pan
@@ -59,8 +60,9 @@ void GetNumbers(int _i, char _line[LINESIZE], int64_t _coords[3][2]) {
             currNum[j] = _line[i+j]; j++;
         }
         if(j > 0) {
-            _coords[_i][k] = strtoll(currNum, &endPtr, base); k++;
-            memset(currNum, 0, sizeof(currNum));
+            _coords[_i][k] = strtoll(currNum, &endPtr, base);
+            if(_i == 2) { _coords[_i][k]+= 10000000000000; }
+            k++; memset(currNum, 0, sizeof(currNum));
         }
 
         i += j;
@@ -69,7 +71,7 @@ void GetNumbers(int _i, char _line[LINESIZE], int64_t _coords[3][2]) {
 }
 
 // Fuck yeah math
-void AttemptClawMachine(struct clawMachine _claw, int *_total) {
+void AttemptClawMachine(struct clawMachine _claw, int64_t *_total) {
     const int matrix[2][2] = {{GetButton('a', 'x', _claw), GetButton('a', 'y', _claw)}, 
                               {GetButton('b', 'x', _claw), GetButton('b', 'y', _claw)}};
     const int64_t sum[2] = {_claw.prizeCoords[0], _claw.prizeCoords[1]};
@@ -80,18 +82,20 @@ void AttemptClawMachine(struct clawMachine _claw, int *_total) {
     yDeterminant = matrix[0][0]*sum[1] - matrix[0][1]*sum[0];
     x = xDeterminant/determinant; y = yDeterminant/determinant;
 
-    // printf("D: %d\nDx: %d\nDy: %d\n", determinant, xDeterminant, yDeterminant);
-    // printf("x: %d\nyx: %d\n\n", x, y);
-
-    if(matrix[0][0]*x + matrix[1][0]*y == sum[0] && matrix[0][1]*x + matrix[1][1]*y == sum[1])
+    if(matrix[0][0]*x + matrix[1][0]*y == sum[0] && matrix[0][1]*x + matrix[1][1]*y == sum[1]) {
         *_total += x*3 + y;
+        printf("Valid!\n");
+    }
+
+    printf("D: %lld\nDx: %lld\nDy: %lld\n", determinant, xDeterminant, yDeterminant);
+    printf("x: %lld\ny: %lld\n\n", x, y);
 }
 
 int main() {
     // Variables
     FILE *file;
     char line[LINESIZE];
-    int total = 0;
+    int64_t total = 0;
 
     // Opening input file
     file = fopen("input.txt", "r");
@@ -99,19 +103,11 @@ int main() {
         int64_t coords[3][2], index = 0;
         // Getting the next line
         while (fgets(line, LINESIZE, file)) {
-            // Button A
-            GetNumbers(0, line, coords);
-
-            // Button B
-            fgets(line, LINESIZE, file);
-            GetNumbers(1, line, coords);
-
-            // Prize Coordinates
-            fgets(line, LINESIZE, file);
-            GetNumbers(2, line, coords);
-
-            // for reading shenanigans whatever
-            fgets(line, LINESIZE, file);
+            // Getting numbers for button A, B and the prize's coordinates
+            for(int i = 0; i < 3; i++) {
+                GetNumbers(i, line, coords);
+                fgets(line, LINESIZE, file);
+            }
 
             // Adding to claw machine array
             clawMachines[index] = CreateClawMachine(coords[0], coords[1], coords[2]);
@@ -132,6 +128,6 @@ int main() {
         AttemptClawMachine(clawMachines[i], &total);
     }
     
-    printf("total: %d\n", total);
+    printf("total: %lld\n", total);
     return 0;
 }
