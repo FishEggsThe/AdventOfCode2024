@@ -3,8 +3,8 @@
 #include <string.h>
 #include <assert.h>
 #define LINESIZE 1024
-#define WIDTH 11//101
-#define HEIGHT 7//103
+#define WIDTH 101
+#define HEIGHT 103
 #define SECONDS 100
 
 // Structs and variables
@@ -15,7 +15,7 @@ struct robot {
     struct vec2D pos, vel; // Position and Velocity
 };
 struct robot robots[1000];
-int numOfRobots = 0, quadrantPopulations[2][2];
+int numOfRobots = 0, quadrantPopulations[2][2] = {{0, 0}, {0, 0}};
 
 // Struct functions
 void BuildRobot(int _values[2][2]) {
@@ -34,17 +34,19 @@ void SimulateRobot(int _i) {
     struct robot robot = robots[_i];
 
     // Moving robot along x-axis
-    robot.pos.x += (robot.vel.x * SECONDS) % WIDTH;
+    robot.pos.x += (robot.vel.x * SECONDS);
+    robot.pos.x %= WIDTH;
     if(robot.pos.x < 0) { robot.pos.x += WIDTH; }
     robots[_i].pos.x = robot.pos.x;
 
     // Moving robot along y-axis
-    robot.pos.y += (robot.vel.y * SECONDS) % HEIGHT;
+    robot.pos.y += (robot.vel.y * SECONDS);
+    robot.pos.y %= HEIGHT;
     if(robot.pos.y < 0) { robot.pos.y += HEIGHT; }
     robots[_i].pos.y = robot.pos.y;
 
     // Checking quadrant
-    if(robot.pos.x == (HEIGHT+1)/2 || robot.pos.y == (HEIGHT+1)/2) { return; }
+    if(robot.pos.x == WIDTH/2 || robot.pos.y == HEIGHT/2) { return; }
     quadrantPopulations[robot.pos.y/(HEIGHT/2+1)][robot.pos.x/(WIDTH/2+1)]++;
 }
 
@@ -55,19 +57,32 @@ void TrimLine(char _line[LINESIZE]) {
 }
 
 void PrintGrid() {
-    char grid[HEIGHT][WIDTH];
+    // Creating Grid
+    char grid[1000][1000];
     int i, j;
     for(i = 0; i < HEIGHT; i++) {
         for(j = 0; j < WIDTH; j++) {
-            if(i == HEIGHT/2+1 || j == WIDTH/2+1)
-                grid[i][j] = '_';
+            if(i == HEIGHT/2 || j == WIDTH/2)
+                grid[i][j] = ' ';
             else
                 grid[i][j] = '.';
         }
     }
+    
+    // Placing points where robots are
     for(i = 0; i < numOfRobots; i++) {
-        grid[robots[i].pos.y][robots[i].pos.x] = 'X';
+        if(!(robots[i].pos.y == HEIGHT/2 || robots[i].pos.x == WIDTH/2))
+            grid[robots[i].pos.y][robots[i].pos.x] = 'X';
     }
+
+    // Printing grid
+    for(i = 0; i < HEIGHT; i++) {
+        for(j = 0; j < WIDTH; j++) {
+            printf("%c", grid[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
 }
 
 // For reading the dumb stupid lines from the input.txt file so stupid
@@ -111,19 +126,13 @@ int main() {
         }
         fclose(file);
     }
-    printf("\n");
-    PrintGrid();
 
     int i, j;
     // Simulating robot schmovement and final quadrant placement
     for(i = 0; i < numOfRobots; i++) {
-        printf("Robot %d\n", i+1);
-        printf("Pos: %d, %d\n", robots[i].pos.x, robots[i].pos.y);
-        printf("Vel: %d, %d\n", robots[i].vel.x, robots[i].vel.y);
         SimulateRobot(i);
-        printf("Final Pos: %d, %d\n\n", robots[i].pos.x, robots[i].pos.y);
     }
-    PrintGrid();
+    // PrintGrid();
 
     // results
     for(i = 0; i < 2; i++) {
